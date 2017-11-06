@@ -7,8 +7,11 @@ const
     Up: 0,
     Down: 0
 }
-, wdth = window.innerWidth
-, hght = window.innerHeight
+, wdth = 680
+, hght = 640
+, rooms = {
+    0: {}
+}
 
 let
 then = Date.now()
@@ -18,9 +21,19 @@ then = Date.now()
 , velocity = {x: 0, y: 0}
 , drag = 3
 , speed = 8
+, currentRoom = 0
 
 canvas.width = wdth
 canvas.height = hght
+
+// Loaders
+
+const loadLevel = name =>
+      fetch(`/levels/${name}.json`, {
+          headers: {
+                'Content-Type': 'application/json'
+          }
+      }).then(result => result.json())
 
 // Keyboard Mapping
 
@@ -92,16 +105,27 @@ const update = dt => {
 
 const render = () => {
     clear()
+    for (let j = 0; j < currentRoom.walls.length; j++) {
+        for (let i = 0; i < currentRoom.walls[j].length; i++) {
+            stage.fillStyle = '#666'
+            stage.fillRect(i * 20, j * 20, 20, 20)
+        }
+    }
     stage.fillStyle = 'yellow'
     stage.fillRect(px, py, 20, 20)
 }
 
-const loop = () => {
-    const now = Date.now()
-    , dt = now - then
-    update(dt / 1000)
-    render()
-    then = now
+Promise.all([
+    loadLevel('1-1')
+]).then(([levelData]) => {
+    currentRoom = levelData
+    const loop = () => {
+        const now = Date.now()
+        , dt = now - then
+        update(dt / 1000)
+        render()
+        then = now
+        window.requestAnimationFrame(loop)
+    }
     window.requestAnimationFrame(loop)
-}
-window.requestAnimationFrame(loop)
+}).catch(err => console.log(err))
